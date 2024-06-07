@@ -4,6 +4,15 @@
 
 **DataWeaver** is a powerful and flexible library designed to simplify the process of building data synchronization pipelines between various systems using any stream processing library. The framework provides a set of abstractions and utilities that enable developers to easily create and manage connectors for different data sources and sinks, making it effortless to integrate with external systems.
 
+## Key Features
+
+- Support for multiple stream processing libraries
+- Built-in connectors for popular data sources and sinks
+- Flexible data transformation and processing
+- Fault tolerance and error handling mechanisms
+- Extensibility for custom connectors and pipelines
+- Easy integration and configuration
+
 ## Goals
 
 ### Simplify Data Integration
@@ -31,6 +40,77 @@ DataWeaver supports various data formats, such as JSON, Avro, and Protobuf, allo
 The framework is designed with testability in mind, providing utilities and mock objects that simplify the process of writing unit tests for connectors and data pipelines. It also integrates with monitoring and logging frameworks, enabling developers to track the health and performance of their data pipelines, diagnose issues, and collect metrics for analysis and optimization.
 
 ## Architecture
+
+DataWeaver's architecture consists of several key components that work together to enable flexible and efficient data synchronization pipelines. The following diagram provides a high-level overview of the architecture:
+
+```mermaid
+graph LR
+A[Stream Processing Framework] -- Implements --> B[StreamProcessingFramework]
+B -- Contains --> C[Connector]
+C -- Extends --> D[SourceConnector]
+C -- Extends --> E[SinkConnector]
+D -- Reads From --> F[External System]
+E -- Writes To --> G[External System]
+D -- Produces --> H[Stream]
+H -- Consumed By --> E
+C -- Defines --> I[read/process/write Methods]
+B -- Creates --> J[ConnectorPipeline]
+J -- Connects --> D
+J -- Connects --> E
+J -- Handles --> K[Data Flow]
+J -- Performs --> L[Transformations]
+J -- Handles --> M[Error Handling]
+```
+
+The following sequence diagram illustrates the interaction and flow of messages between the components of the DataWeaver framework during the data synchronization process:
+sequenceDiagram
+
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant FW as StreamProcessingFramework
+    participant SP as SourceConnector
+    participant SK as SinkConnector
+    participant CP as ConnectorPipeline
+    participant ES as ExternalSystem
+
+    App->>FW: Initialize Framework
+    FW-->>App: Framework Instance
+
+    App->>SP: Create Source Connector
+    SP-->>App: Source Connector Instance
+
+    App->>SK: Create Sink Connector
+    SK-->>App: Sink Connector Instance
+
+    App->>CP: Create Connector Pipeline
+    CP-->>App: Connector Pipeline Instance
+
+    App->>CP: Start Pipeline
+    activate CP
+
+    CP->>SP: Start Reading
+    activate SP
+
+    loop Data Synchronization
+        SP->>ES: Read Data
+        ES-->>SP: Data
+
+        SP->>SP: Process Data
+        SP->>FW: Produce Message
+        FW->>SK: Consume Message
+
+        SK->>SK: Process Message
+        SK->>ES: Write Data
+    end
+
+    CP->>SP: Stop Reading
+    deactivate SP
+
+    CP->>App: Pipeline Stopped
+    deactivate CP
+```
+
 
 ### Wrapper Interface
 
@@ -90,6 +170,10 @@ class CustomSourceConnector(SourceConnector):
         # Custom implementation
         pass
 
+    def process(self, message):
+        # Custom transformation logic
+        return message
+
 class CustomSinkConnector(SinkConnector):
     def write(self, message):
         # Custom implementation
@@ -114,7 +198,7 @@ pipeline.start()
 
 ### Example
 
-Here’s a simple example of using DataWeaver with a Kafka stream processing framework:
+Here's a simple example of using DataWeaver with a Kafka stream processing framework:
 
 ```python
 from dataweaver import KafkaStreamsWrapper, SourceConnector, SinkConnector, ConnectorPipeline
@@ -127,6 +211,11 @@ class MySourceConnector(SourceConnector):
     def read(self):
         for message in self.framework.consume_stream(self.topic):
             yield message
+
+    def process(self, message):
+        # Perform data transformation
+        message['processed'] = True
+        return message
 
 class MySinkConnector(SinkConnector):
     def write(self, message):
@@ -141,6 +230,27 @@ pipeline = ConnectorPipeline(source, sink)
 pipeline.start()
 ```
 
+### Configuration
+
+DataWeaver provides configuration options to customize the behavior of the framework and its components. Here are some common configuration settings:
+
+- `stream_processing_framework`: Specifies the stream processing framework to use (e.g., Kafka, Flink, Spark).
+- `connector_config`: Specifies configuration options for individual connectors, such as connection details, authentication, and data format.
+- `pipeline_config`: Specifies configuration options for the connector pipeline, such as error handling policies and data transformation settings.
+
+Configuration can be provided through a configuration file or programmatically when creating the framework and connectors.
+
+### Best Practices
+
+Here are some best practices and tips for effectively using DataWeaver:
+
+- Design modular and reusable connectors that perform specific tasks and can be easily combined to create complex data pipelines.
+- Use appropriate data formats and serialization mechanisms based on the requirements of the source and sink systems.
+- Implement proper error handling and retry mechanisms to ensure data integrity and resilience in case of failures.
+- Optimize data transformations and processing logic to minimize overhead and improve performance.
+- Monitor and track the health and performance of data pipelines using logging and monitoring frameworks.
+- Test connectors and pipelines thoroughly with various scenarios and edge cases to ensure reliability and correctness.
+
 ## Contributing
 
 We welcome contributions from the community. To contribute to DataWeaver, please follow these steps:
@@ -152,6 +262,30 @@ We welcome contributions from the community. To contribute to DataWeaver, please
 5. **Open a pull request to the main repository.**
 
 Please ensure that your code adheres to our coding standards and includes appropriate tests.
+
+When contributing, consider the following guidelines:
+
+- Follow the existing code style and conventions used in the project.
+- Provide clear and concise documentation for any new features or changes.
+- Write unit tests to cover the critical functionality of your contributions.
+- Be responsive to feedback and participate in the code review process.
+- Be respectful and considerate towards other contributors and maintainers.
+
+We appreciate your contributions and efforts to make DataWeaver better!
+
+## Roadmap
+
+Here are some of the planned features and enhancements for future releases of DataWeaver:
+
+- Support for additional stream processing frameworks and libraries.
+- Improved performance and scalability optimizations.
+- Enhanced monitoring and debugging capabilities.
+- Integration with popular data storage and analytics platforms.
+- Expanded collection of built-in connectors for common data sources and sinks.
+- Support for distributed tracing and observability.
+- Improved documentation and tutorials for getting started and advanced usage.
+
+We value your feedback and suggestions. If you have any ideas or feature requests, please open an issue on our GitHub repository.
 
 ---
 
